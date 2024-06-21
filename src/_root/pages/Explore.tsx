@@ -1,14 +1,31 @@
 import GridPostList from "@/components/shared/GridPostList";
 import Loader from "@/components/shared/Loader";
-import SearchResults from "@/components/shared/SearchResults";
 import { Input } from "@/components/ui/input"
 import useDebounce from "@/hooks/useDebound";
 import { useGetPosts, useSearchPosts } from "@/lib/react-query/queriesAndMutations";
 import { useEffect, useState } from "react"
 import { useInView } from "react-intersection-observer";
 
+export type SearchResultProps = {
+  isSearchFetching: boolean;
+  searchedPosts: any;
+};
+
+const SearchResults = ({ isSearchFetching, searchedPosts }: SearchResultProps) => {
+  if (isSearchFetching) {
+    return <Loader />;
+  } else if (searchedPosts && searchedPosts.documents.length > 0) {
+    return <GridPostList posts={searchedPosts.documents} />;
+  } else {
+    return (
+      <p className="text-light-4 mt-10 text-center w-full">No results found</p>
+    );
+  }
+};
+
 const Explore = () => {
-  const {ref, InView} = useInView();
+
+  const {ref, inView} = useInView();
   const {data : posts, fetchNextPage, hasNextPage } = useGetPosts();
 
   const[searchValue, setSearchValue] = useState('');
@@ -17,8 +34,8 @@ const Explore = () => {
   const {data : searchedPosts, isFetching: isSearchFetching} = useSearchPosts(debouncedValue);
 
   useEffect(()=>{
-    if(InView && !searchValue)fetchNextPage();
-  }, [InView, searchValue])
+    if(inView && !searchValue)fetchNextPage();
+  }, [inView, searchValue])
 
   if(!posts){
     return (
@@ -74,8 +91,8 @@ const Explore = () => {
        <div className="flex flex-wrap gap-9 w-full max-w-5xl">
         {shouldShowSearchResults ? (
           <SearchResults 
-          isSearchFetching ={isSearchFetching}
-          searchedPosts = {searchedPosts}
+          isSearchFetching = {isSearchFetching}
+          searchedPosts = {searchedPosts }
           />
         ) : shouldShowPosts ? (<p className="text-light-4 mt-10 w-full text-center">End of Posts</p>) : posts.pages.map((item, idx)=>(
           <GridPostList key={`page-${idx}`} posts={item.documents}/>
